@@ -38,3 +38,19 @@ gulp.task('vendor', function() {
     .pipe(gulpif(production, uglify({ mangle: false })))
     .pipe(gulp.dest('public/js'));
 });
+
+
+/*
+ |--------------------------------------------------------------------------
+ | Compile third-party dependencies separately for faster performance.
+ |--------------------------------------------------------------------------
+ */
+gulp.task('browserify-vendor', function() {
+  return browserify()
+    .require(dependencies)
+    .bundle()
+    .pipe(source('vendor.bundle.js'))
+    .pipe(buffer())
+    .pipe(gulpif(production, uglify({ mangle: false })))
+    .pipe(gulp.dest('public/js'));
+});
