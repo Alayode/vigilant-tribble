@@ -54,3 +54,52 @@ gulp.task('browserify-vendor', function() {
     .pipe(gulpif(production, uglify({ mangle: false })))
     .pipe(gulp.dest('public/js'));
 });
+/*
+ |--------------------------------------------------------------------------
+ | Same as browserify task, but will also watch for changes and re-compile.
+ |--------------------------------------------------------------------------
+ */
+gulp.task('browserify-watch', ['browserify-vendor'], function() {
+  var bundler = watchify(browserify({ entries: 'app/main.js', debug: true }, watchify.args));
+  bundler.external(dependencies);
+  bundler.transform(babelify, { presets: ['es2015', 'react'] });
+  bundler.on('update', rebundle);
+  return rebundle();
+
+  function rebundle() {
+    var start = Date.now();
+    return bundler.bundle()
+      .on('error', function(err) {
+        gutil.log(gutil.colors.red(err.toString()));
+      })
+      .on('end', function() {
+        gutil.log(gutil.colors.green('Finished rebundling in', (Date.now() - start) + 'ms.'));
+      })
+      .pipe(source('bundle.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({ loadMaps: true }))
+      .pipe(sourcemaps.write('.'))
+      .pipe(gulp.dest('public/js/'));
+  }
+});
+
+/*
+ |--------------------------------------------------------------------------
+ | Compile LESS stylesheets.
+ |--------------------------------------------------------------------------
+ */
+gulp.task('styles', function() {
+  return gulp.src('app/stylesheets/main.less')
+    .pipe(plumber())
+    .pipe(less())
+    .pipe(autoprefixer())
+    .pipe(gulpif(production, cssmin()))
+    .pipe(gulp.dest('public/css'));
+});
+
+gulp.task('watch', function() {
+  gulp.watch('app/stylesheets/**/*.less', ['styles']);
+});
+
+gulp.task('default', ['styles', 'vendor', 'browserify-watch', 'watch']);
+gulp.task('build', ['styles', 'vendor', 'browserify']);
