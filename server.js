@@ -38,10 +38,12 @@ app.use(express.static(path.join(__dirname, 'public')));
       }
 
       // create and use the Character update method.
-      Character.update({})
-
-    })
- })
+      Character.update({},{ $set: {voted:false} },{multi:true}, function(err){
+        if(err) return next(err);
+        res.send([]);
+      });
+    });
+ });
 
 
 
