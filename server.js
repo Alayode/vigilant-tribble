@@ -37,6 +37,12 @@ app.use(express.static(path.join(__dirname, 'public')));
         return res.send(characters);
       }
 
+
+      //If we don't get back 2 characters for either Male or Female gender
+      // create another query with the oppositeGender.
+      var oppositeGender = _.first(_.without(choices, randomGender));
+
+
       // create and use the Character update method.
       Character.update({},{ $set: {voted:false} },{multi:true}, function(err){
         if(err) return next(err);
@@ -44,6 +50,31 @@ app.use(express.static(path.join(__dirname, 'public')));
       });
     });
  });
+
+
+ /**
+  * PUT /api/characters
+  * Update winning and losing count for both characters.
+  */
+
+  app.put('/api/characters',function(req,res,next){
+    var winner = req.body.winner;
+    var loser = req.body.loser;
+
+    if(!winner || !loser){
+      return res.status(400).send({message: 'Voting Requires two characters. '});
+
+    }
+
+    if(winner === loser){
+      return res.status(400).send({message: 'Cannot vote for and against the same character.'});
+    }
+
+  });
+
+    }
+
+  })
 
 
 
